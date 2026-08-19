@@ -493,6 +493,19 @@ function sizeWorld(){
 }
 let world=null;
 const meta={lvl:1,xp:0,coins:0,found:new Set(),exp:0};
+/* ============ persistence (localStorage — works on real origins like GitHub Pages) ============ */
+const SAVE_KEY='strata-save-v1';
+function saveMeta(){try{
+ localStorage.setItem(SAVE_KEY,JSON.stringify({lvl:meta.lvl,xp:meta.xp,coins:meta.coins,found:[...meta.found],exp:meta.exp}))
+}catch(e){/* storage unavailable (private mode / sandboxed) — play session-only */}}
+function loadMeta(){try{
+ const s=JSON.parse(localStorage.getItem(SAVE_KEY)||'null');
+ if(!s)return false;
+ meta.lvl=Math.max(1,s.lvl|0);meta.xp=Math.max(0,+s.xp||0);
+ meta.coins=Math.max(0,s.coins|0);meta.exp=Math.max(0,s.exp|0);
+ meta.found=new Set(Array.isArray(s.found)?s.found:[]);
+ return true
+}catch(e){return false}}
 const state={energy:0,maxE:0,tool:'trowel',digCount:0,finds:[],scans:3,scanUntil:0};
 const ui={mode:'menu',prev:null,panMode:false,mouse:null,digging:false,lastDigW:null,lastDigT:0,space:false};
 const parts=[],glows=[];
@@ -655,7 +668,7 @@ function recover(o){
  meta.coins+=d.val;state.finds.push(d);meta.found.add(d.id);
  glows.push({x:o.x,y:o.y,r:o.half,t:0});
  toast('<b style="color:'+rc.c+'">'+d.name+'</b> recovered! <span class="rar" style="background:'+rc.c+'22;color:'+rc.c+'">'+rc.n+'</span> +🪙'+d.val,rc.c);
- addXP(d.xp);hud();
+ addXP(d.xp);hud();saveMeta();
 }
 function addXP(n){meta.xp+=n;
  while(meta.xp>=xpNeed()){meta.xp-=xpNeed();meta.lvl++;
@@ -788,7 +801,7 @@ function startExpedition(biomeId,seed){
  state.finds=[];state.scans=3;state.scanUntil=0;state.digCount=0;
  if(meta.lvl<TOOLS[state.tool].min)state.tool='trowel';
  generate(biomeId,seed);
- meta.exp++;
+ meta.exp++;saveMeta();
  document.getElementById('locChip').innerHTML='<b>'+world.biome.n+'</b> · '+world.seedStr;
  fitCamera();renderToolbar();renderSide();hud();
  toast('Expedition '+meta.exp+' started — dig anywhere');
@@ -935,14 +948,20 @@ function updateDbg(){
  if(!dbgOn){dbg.style.display='none';return}
  dbg.style.display='block';
  const found=world?world.objects.filter(o=>!o.recovered).length:0;
+ const r=cv.getBoundingClientRect();
+ const vv=window.visualViewport;
  dbg.textContent=
-  'win '+innerWidth+'x'+innerHeight+' dpr'+(devicePixelRatio||1).toFixed(1)+'\n'+
+  'win '+innerWidth+'x'+innerHeight+' dpr'+(devicePixelRatio||1).toFixed(2)+'\n'+
+  'mouse '+(ui.mouse?Math.round(ui.mouse.x)+','+Math.round(ui.mouse.y):'—')+'  zoom '+(outerWidth?(outerWidth/innerWidth).toFixed(2):'?')+(vv?' vvs '+vv.scale.toFixed(2):'')+'\n'+
+  'cvrect '+Math.round(r.left)+','+Math.round(r.top)+' '+Math.round(r.width)+'x'+Math.round(r.height)+'  backing '+cv.width+'x'+cv.height+'\n'+
   'world '+W+'x'+H+'  cam.s '+cam.s.toFixed(3)+'\n'+
   'cam '+Math.round(cam.x)+','+Math.round(cam.y)+'  vvb '+getComputedStyle(document.documentElement).getPropertyValue('--vvb').trim()+'\n'+
   'energy '+Math.ceil(state.energy)+'  buried '+found+'\n'+
   'lastDig '+lastDig;
 }
+const hadSave=loadMeta();
 renderToolbar();renderSide();hud();showStart();
+if(hadSave)toast('💾 Progress restored — Lv '+meta.lvl+' · 🪙'+meta.coins+' · 🏛 '+meta.found.size+' catalogued','#8fe86c');
 requestAnimationFrame(frame);
 </script>
 </body></html>
