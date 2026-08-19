@@ -18,7 +18,6 @@
  #toolbar{position:fixed;left:50%;bottom:calc(12px + var(--vvb,0px) + env(safe-area-inset-bottom,0px));transform:translateX(-50%);display:flex;gap:6px;z-index:5}
  .tbtn{width:56px;height:58px;border-radius:12px;border:1px solid rgba(255,255,255,.1);background:rgba(20,17,14,.72);backdrop-filter:blur(6px);color:#cfc6b2;font-size:9px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;padding:0}
  .tbtn.on{border-color:#e8b34b;color:#f2d992;background:rgba(60,45,20,.8);box-shadow:0 0 12px rgba(232,179,75,.25)}
- .tbtn.lock{opacity:.35;pointer-events:none}
  #side{position:fixed;right:12px;bottom:calc(12px + var(--vvb,0px) + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:6px;z-index:5}
  #toast{position:fixed;left:50%;top:64px;transform:translateX(-50%);display:flex;flex-direction:column;gap:6px;align-items:center;z-index:8;pointer-events:none;width:max-content;max-width:90vw}
  .tmsg{background:rgba(20,17,14,.87);border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:8px 16px;font-size:13px;animation:tin .3s ease;box-shadow:0 4px 18px rgba(0,0,0,.4)}
@@ -33,14 +32,12 @@
  .brow:last-child{border-bottom:none}
  .brow:hover{background:rgba(232,179,75,.08)}
  .brow.sel{background:rgba(232,179,75,.14)}
- .brow.lock{opacity:.4;pointer-events:none}
  .brow .bicon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
  .brow .bicon svg{width:20px;height:20px;display:block}
  .brow .binfo{flex:1;min-width:0}
  .brow .binfo b{font-size:14px;display:block}
  .brow .binfo span{font-size:11px;color:#9a917d;display:block;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
  .brow .bstat{font-size:12px;color:#e8b34b;white-space:nowrap;flex-shrink:0;letter-spacing:1px}
- .brow.lock .bstat{color:#9a917d;letter-spacing:0;font-size:11px}
  .btn{background:linear-gradient(180deg,#e8b34b,#c99230);border:none;color:#2a1f0c;font-weight:700;padding:11px 26px;border-radius:10px;font-size:15px;cursor:pointer;letter-spacing:.5px}
  .btn:hover{filter:brightness(1.08)}
  .btn2{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#d8d0bd;padding:9px 18px;border-radius:10px;font-size:13px;cursor:pointer}
@@ -426,31 +423,31 @@ const BIOMES={
   decor:[['shell',26],['pebble',30],['stick',7],['seaweed',9],['starfish',4]],
   items:[['coin',26],['sharktooth',22],['pearl',10],['ammonite',16],['potshard',12],['goldring',7],['silver',6],['amber',5],['megtooth',3]],
   large:['ship','chest']},
- desert:{n:'Desert Ruins',unlock:2,diff:2,prefix:'DUNES',accent:'#e0a054',tag:'Buried temples &amp; sand-swept relics',
+ desert:{n:'Desert Ruins',unlock:1,diff:2,prefix:'DUNES',accent:'#e0a054',tag:'Buried temples &amp; sand-swept relics',
   css:'linear-gradient(135deg,#e8cf96,#b98d4e)',cols:['#e0c28a','#c19c60'],
   layers:[{c:[198,160,100],v:26,h:1.2},{c:[152,110,66],v:22,h:2},{c:[124,98,70],v:18,h:4.2},{c:[96,76,58],v:14,h:6.5}],
   decor:[['dune',14],['crack',12],['pebble',22],['shrub',9],['rockd',8]],
   items:[['potshard',24],['coin',22],['amphora',10],['axe',10],['mask',6],['amulet',6],['topaz',8],['gold',6],['fishfossil',6],['idol',2]],
   large:['statue','temple','chest']},
- mountain:{n:'Rocky Mountains',unlock:3,diff:2,prefix:'RIDGE',accent:'#a39a86',tag:'Ore veins &amp; fossil beds',
+ mountain:{n:'Rocky Mountains',unlock:1,diff:2,prefix:'RIDGE',accent:'#a39a86',tag:'Ore veins &amp; fossil beds',
   css:'linear-gradient(135deg,#a8a092,#5f584c)',cols:['#8f8878','#6b6457'],
   layers:[{c:[128,120,104],v:24,h:1.6},{c:[98,82,60],v:22,h:2.4},{c:[88,84,78],v:18,h:5},{c:[58,56,52],v:14,h:8}],
   decor:[['rockd',26],['pebble',40],['moss',12],['crack',10]],
   items:[['quartz',20],['copper',14],['pyrite',12],['trilobite',14],['ammonite',10],['amethyst',10],['claw',6],['vertebra',8],['gold',5],['sapphire',4],['emerald',2]],
   large:['dino','geode','crystalbed']},
- volcano:{n:'Volcanic Island',unlock:5,diff:3,prefix:'MAGMA',accent:'#e8642e',tag:'Obsidian, gems &amp; ancient impacts',
+ volcano:{n:'Volcanic Island',unlock:1,diff:3,prefix:'MAGMA',accent:'#e8642e',tag:'Obsidian, gems &amp; ancient impacts',
   css:'linear-gradient(135deg,#4a4442,#c04818)',cols:['#4c4644','#302c2c'],
   layers:[{c:[94,88,86],v:20,h:1.4},{c:[60,54,54],v:18,h:2.6},{c:[44,40,42],v:14,h:6},{c:[30,26,30],v:12,h:9}],
   decor:[['fissure',7],['obshard',26],['crack',14],['rockd',12],['pebble',20]],
   items:[['obsidianshard',22],['pyrite',12],['meteoriron',8],['ruby',6],['fireopal',5],['diamond',3],['claw',5],['vertebra',6],['gold',6],['quartz',10]],
   large:['meteorite','crystalbed','geode']},
- tundra:{n:'Frozen Tundra',unlock:7,diff:3,prefix:'FROST',accent:'#8fd0e8',tag:'Ice-locked bones &amp; permafrost relics',
+ tundra:{n:'Frozen Tundra',unlock:1,diff:3,prefix:'FROST',accent:'#8fd0e8',tag:'Ice-locked bones &amp; permafrost relics',
   css:'linear-gradient(135deg,#eef4f8,#9fb8c8)',cols:['#e6edf2','#c3d2da'],
   layers:[{c:[212,222,228],v:16,h:1},{c:[168,196,212],v:18,h:2.2},{c:[110,96,76],v:20,h:3.2},{c:[84,88,96],v:14,h:6}],
   decor:[['icestreak',18],['pebble',14],['rockd',8],['sparkle',120],['crack',6]],
   items:[['amber',14],['sapphire',8],['fishfossil',12],['tusk',8],['silver',10],['quartz',12],['vertebra',8],['trilobite',8],['diamond',2]],
   large:['mammoth','dino']},
- crystal:{n:'Crystal Caverns',unlock:9,diff:4,prefix:'GEODE',accent:'#a888e8',tag:'Geode chambers &amp; mineral veins',
+ crystal:{n:'Crystal Caverns',unlock:1,diff:4,prefix:'GEODE',accent:'#a888e8',tag:'Geode chambers &amp; mineral veins',
   css:'linear-gradient(135deg,#6b5bb8,#241f30)',cols:['#3c3450','#251f32'],
   layers:[{c:[82,72,104],v:22,h:1.8},{c:[60,52,80],v:18,h:3},{c:[42,36,60],v:16,h:6},{c:[28,24,42],v:12,h:9}],
   decor:[['crystald',34],['sparkle',140],['rockd',10],['crack',8]],
@@ -472,9 +469,9 @@ function biomeIconSVG(id,color){
 const TOOLS={
  brush:{n:'Brush',r:13,soft:.55,rock:.15,cost:.4,icon:'🖌',min:1},
  trowel:{n:'Trowel',r:22,soft:1,rock:.3,cost:.8,icon:'🛠',min:1},
- shovel:{n:'Shovel',r:38,soft:1.8,rock:.12,cost:1.4,icon:'⚒',min:2},
- pick:{n:'Pickaxe',r:20,soft:.7,rock:1.6,cost:1.4,icon:'⛏',min:3},
- hammer:{n:'Geo Hammer',r:26,soft:.6,rock:2.6,cost:2,icon:'🔨',min:5}
+ shovel:{n:'Shovel',r:38,soft:1.8,rock:.12,cost:1.4,icon:'⚒',min:1},
+ pick:{n:'Pickaxe',r:20,soft:.7,rock:1.6,cost:1.4,icon:'⛏',min:1},
+ hammer:{n:'Geo Hammer',r:26,soft:.6,rock:2.6,cost:2,icon:'🔨',min:1}
 };
 /* ============ state ============ */
 let W=1280,H=960;
@@ -674,10 +671,7 @@ function recover(o){
 }
 function addXP(n){meta.xp+=n;
  while(meta.xp>=xpNeed()){meta.xp-=xpNeed();meta.lvl++;
-  toast('⭐ Level up! Now level '+meta.lvl,'#e8b34b');checkUnlocks();renderToolbar()}}
-function checkUnlocks(){
- for(const id in BIOMES)if(BIOMES[id].unlock===meta.lvl)toast('🗺 New dig site unlocked: '+BIOMES[id].n,'#8fe86c');
- for(const k in TOOLS)if(TOOLS[k].min===meta.lvl)toast('🧰 New tool unlocked: '+TOOLS[k].n,'#8fe86c');}
+  toast('⭐ Level up! Now level '+meta.lvl,'#e8b34b');renderToolbar()}}
 /* ============ camera ============ */
 const cv=document.getElementById('cv');
 const cam={x:W/2,y:H/2,s:1,min:1};
@@ -728,7 +722,7 @@ addEventListener('keydown',e=>{
  if(e.key===' '){ui.space=true;e.preventDefault()}
  const keys=['brush','trowel','shovel','pick','hammer'];
  const i=parseInt(e.key)-1;
- if(i>=0&&i<keys.length&&meta.lvl>=TOOLS[keys[i]].min){state.tool=keys[i];renderToolbar()}});
+ if(i>=0&&i<keys.length){state.tool=keys[i];renderToolbar()}});
 addEventListener('keyup',e=>{if(e.key===' ')ui.space=false});
 addEventListener('resize',()=>{if(world){cam.min=Math.max(innerWidth/W,innerHeight/H);cam.s=clamp(cam.s,cam.min,cam.min*4);clampCam()}});
 /* ============ scanner ============ */
@@ -750,10 +744,10 @@ function hud(){
  document.getElementById('lvTxt').textContent=meta.lvl;
  document.querySelector('#xbar i').style.width=clamp(meta.xp/xpNeed()*100,0,100)+'%'}
 function renderToolbar(){const tb=document.getElementById('toolbar');tb.innerHTML='';
- for(const k in TOOLS){const t=TOOLS[k],locked=meta.lvl<t.min;
+ for(const k in TOOLS){const t=TOOLS[k];
   const b=document.createElement('button');
-  b.className='tbtn'+(state.tool===k?' on':'')+(locked?' lock':'');
-  b.innerHTML='<div style="font-size:17px">'+t.icon+'</div>'+t.n+(locked?'<span style="font-size:8px;color:#888">Lv '+t.min+'</span>':'');
+  b.className='tbtn'+(state.tool===k?' on':'');
+  b.innerHTML='<div style="font-size:17px">'+t.icon+'</div>'+t.n;
   b.onclick=()=>{state.tool=k;renderToolbar()};
   tb.appendChild(b)}}
 function renderSide(){const s=document.getElementById('side');s.innerHTML='';
@@ -775,11 +769,11 @@ function suggestSeed(){const chars='ABCDEFGHJKMNPQRSTUVWXYZ23456789';let s='';
 function showStart(){ui.mode='menu';ui.prev=null;
  const m=document.getElementById('modal');m.classList.remove('hidden');
  let bio='';
- for(const id in BIOMES){const b=BIOMES[id],locked=meta.lvl<b.unlock;
-  bio+='<div class="brow'+(locked?' lock':'')+(startSel===id?' sel':'')+'" data-b="'+id+'">'
+ for(const id in BIOMES){const b=BIOMES[id];
+  bio+='<div class="brow'+(startSel===id?' sel':'')+'" data-b="'+id+'">'
    +'<div class="bicon" style="background:'+b.accent+'26">'+biomeIconSVG(id,b.accent)+'</div>'
    +'<div class="binfo"><b>'+b.n+'</b><span>'+b.tag+'</span></div>'
-   +'<div class="bstat">'+(locked?'🔒 Lv '+b.unlock:'★'.repeat(b.diff)+'<span style="opacity:.25">'+'★'.repeat(4-b.diff)+'</span>')+'</div></div>'}
+   +'<div class="bstat">'+'★'.repeat(b.diff)+'<span style="opacity:.25">'+'★'.repeat(4-b.diff)+'</span></div></div>'}
  m.innerHTML='<div class="panel"><h1>⛏ STRATA</h1>'
   +'<div class="sub">An archaeological excavation sandbox. Choose a dig site, then '+(TOUCH?'touch':'click')+' &amp; drag the ground to brush away sand, soil and stone. Everything buried at a site already exists — the same site code always hides the same world.</div>'
   +'<div class="blist">'+bio+'</div>'
@@ -802,7 +796,6 @@ function startExpedition(biomeId,seed){
  ui.mode='play';ui.panMode=false;
  state.maxE=240+(meta.lvl-1)*30;state.energy=state.maxE;
  state.finds=[];state.scans=3;state.scanUntil=0;state.digCount=0;
- if(meta.lvl<TOOLS[state.tool].min)state.tool='trowel';
  generate(biomeId,seed);
  meta.exp++;saveMeta();
  document.getElementById('locChip').innerHTML='<b>'+world.biome.n+'</b> · '+world.seedStr;
