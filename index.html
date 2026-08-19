@@ -4,6 +4,41 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
     <title>Strata — Archaeological Dig Site</title>
+    <script>
+      // Temporary diagnostic: prints any JS error directly onto the page
+      // instead of failing silently to a blank screen. A blank white page
+      // means the module script below either never loaded, failed to
+      // parse, or threw during startup — none of which show up in the
+      // normal browser UI without opening dev tools, so this puts the
+      // error text where it can actually be seen. Non-module and placed
+      // before the module script so it's active even if that script fails
+      // to parse entirely. Remove once the underlying bug is found.
+      (function () {
+        var shown = false
+        function show(text) {
+          if (shown) return
+          shown = true
+          var pre = document.createElement('pre')
+          pre.style.cssText =
+            'position:fixed;inset:0;z-index:999999;margin:0;padding:16px;' +
+            'background:#fff;color:#c00;font:12px/1.4 monospace;' +
+            'white-space:pre-wrap;overflow:auto;'
+          pre.textContent = 'STRATA DIAGNOSTIC — a script error is likely why the page is blank:\n\n' + text
+          document.body.appendChild(pre)
+        }
+        window.addEventListener('error', function (e) {
+          show(
+            (e.message || 'Unknown error') +
+              '\nat ' + (e.filename || '?') + ':' + e.lineno + ':' + e.colno +
+              (e.error && e.error.stack ? '\n\n' + e.error.stack : ''),
+          )
+        })
+        window.addEventListener('unhandledrejection', function (e) {
+          var r = e.reason
+          show('Unhandled promise rejection: ' + (r && r.stack ? r.stack : String(r)))
+        })
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>
