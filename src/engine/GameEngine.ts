@@ -69,6 +69,16 @@ export class GameEngine implements InputTarget {
     if (this.canvas.width !== Math.round(iw * dpr) || this.canvas.height !== Math.round(ih * dpr)) {
       this.canvas.width = Math.round(iw * dpr)
       this.canvas.height = Math.round(ih * dpr)
+      // <canvas> is a CSS "replaced element" — position:fixed;inset:0 alone
+      // does NOT stretch it to the viewport like it would a <div>; browsers
+      // size a replaced element from its width/height *attributes* instead.
+      // Without pinning the CSS box back to viewport size explicitly here,
+      // the canvas visually balloons to iw*dpr × ih*dpr CSS pixels on any
+      // display with devicePixelRatio > 1 (i.e. most phones and laptops),
+      // gets clipped by overflow:hidden, and pointer coordinates stop
+      // lining up with what's drawn — digs land off the visible area.
+      this.canvas.style.width = iw + 'px'
+      this.canvas.style.height = ih + 'px'
     }
     const g = this.ctx
     g.setTransform(dpr, 0, 0, dpr, 0, 0)
