@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Theme tokens carried over from legacy/strata-original.html's palette
+   (#141210 background, #e8e2d4 text, #e8b34b amber accent). Filled in
+   further as the modal/HUD components are ported. */
+:root {
+  --background: 20 8% 8%;
+  --foreground: 40 20% 88%;
+  --border: 0 0% 100% / 0.08;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family:
+    'Segoe UI',
+    system-ui,
+    sans-serif;
+  -webkit-user-select: none;
+  user-select: none;
+}
