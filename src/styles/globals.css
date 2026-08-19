@@ -2,13 +2,40 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Theme tokens carried over from legacy/strata-original.html's palette
-   (#141210 background, #e8e2d4 text, #e8b34b amber accent). Filled in
-   further as the modal/HUD components are ported. */
+/* Theme tokens — HSL approximations of legacy/strata-original.html's
+   amber/dark palette (#141210 bg, #1c1813 panels, #e8e2d4 text, #e8b34b
+   amber accent, #e86c5b error, #9a917d muted), expressed as shadcn/ui's
+   `hsl(var(--x) / <alpha-value>)` triplets so Tailwind opacity modifiers
+   (e.g. bg-card/70) work on them. */
 :root {
-  --background: 20 8% 8%;
-  --foreground: 40 20% 88%;
-  --border: 0 0% 100% / 0.08;
+  --background: 20 10% 7%;
+  --foreground: 42 28% 87%;
+
+  --card: 30 18% 9%;
+  --card-foreground: 42 28% 87%;
+  --popover: 30 18% 9%;
+  --popover-foreground: 42 28% 87%;
+
+  --primary: 39 78% 60%;
+  --primary-foreground: 30 45% 11%;
+
+  --secondary: 40 8% 20%;
+  --secondary-foreground: 42 22% 85%;
+
+  --muted: 40 8% 18%;
+  --muted-foreground: 40 12% 60%;
+
+  --accent: 39 78% 60%;
+  --accent-foreground: 30 45% 11%;
+
+  --destructive: 6 74% 65%;
+  --destructive-foreground: 20 10% 10%;
+
+  --border: 40 12% 22%;
+  --input: 40 12% 22%;
+  --ring: 39 78% 60%;
+
+  --radius: 0.75rem;
 }
 
 html,
@@ -25,4 +52,6 @@ body {
     sans-serif;
   -webkit-user-select: none;
   user-select: none;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
 }
