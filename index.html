@@ -858,8 +858,8 @@ function showMuseum(){
    Two players enter the same room code anywhere in the world; offers relay through
    a Supabase Realtime channel. Fill in the two constants below from your Supabase
    dashboard → Project Settings → API. The anon key is public by design. */
-const SB_URL='';  https://fqzqgslpobpuudexbxcf.supabase.co
-const SB_KEY=''; sb_publishable_hJh6invS7pYFBhhCK38wLw_rXzgGO4A
+const SB_URL='https://fqzqgslpobpuudexbxcf.supabase.co';
+const SB_KEY='sb_publishable_hJh6invS7pYFBhhCK38wLw_rXzgGO4A';
 let sb=null,trade=null;
 function loadSupabase(){return new Promise((res,rej)=>{
  if(window.supabase)return res();
