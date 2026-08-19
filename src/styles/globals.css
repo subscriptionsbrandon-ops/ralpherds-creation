@@ -41,8 +41,24 @@
 html,
 body,
 #root {
-  height: 100%;
   margin: 0;
+  /* dvh tracks the *dynamic* viewport (shrinks/grows with the mobile
+     browser's address bar) instead of the vh unit's fixed "large viewport"
+     assumption — falls back to vh where dvh isn't supported. */
+  height: 100vh;
+  height: 100dvh;
+}
+
+html,
+body {
+  /* Without this, the document is a scrollable container, and a touch-drag
+     on the canvas (dragging to dig) gets picked up by the browser as a page
+     scroll/rubber-band-bounce gesture instead — "the window moves". */
+  overflow: hidden;
+  /* Belt-and-braces: some mobile browsers (notably iOS Safari) still permit
+     an elastic overscroll bounce at the document edges even with
+     overflow:hidden set; this disables that too. */
+  overscroll-behavior: none;
 }
 
 body {
