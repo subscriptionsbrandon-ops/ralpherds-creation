@@ -41,25 +41,21 @@
 html,
 body,
 #root {
+  height: 100%;
   margin: 0;
-  /* dvh tracks the *dynamic* viewport (shrinks/grows with the mobile
-     browser's address bar) instead of the vh unit's fixed "large viewport"
-     assumption — falls back to vh where dvh isn't supported. */
-  height: 100vh;
-  height: 100dvh;
 }
 
-html,
-body {
-  /* Without this, the document is a scrollable container, and a touch-drag
-     on the canvas (dragging to dig) gets picked up by the browser as a page
-     scroll/rubber-band-bounce gesture instead — "the window moves". */
-  overflow: hidden;
-  /* Belt-and-braces: some mobile browsers (notably iOS Safari) still permit
-     an elastic overscroll bounce at the document edges even with
-     overflow:hidden set; this disables that too. */
-  overscroll-behavior: none;
-}
+/* NOTE: an earlier version of this rule added overflow:hidden (+ dvh sizing
+   + overscroll-behavior:none) to html/body, to stop the page from
+   scrolling/bouncing while dragging to dig on mobile — matching
+   legacy/strata-original.html's html,body rule. That change is the only
+   commit between a build confirmed working on a real iPhone and one that
+   reportedly rendered a blank white screen there. It's reverted here to
+   restore the confirmed-working baseline while the actual cause (root CSS
+   change vs. something else entirely) gets properly isolated on a real
+   device/WebKit rather than guessed at — see git history around
+   952a1b1 (the change) for the reasoning that prompted it; the
+   page-movement-while-digging issue it addressed is real and still open. */
 
 body {
   font-family:
