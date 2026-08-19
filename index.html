@@ -492,11 +492,11 @@ function sizeWorld(){
  H=clamp(Math.round(h/2)*2,WORLD_MIN,WORLD_MAX);
 }
 let world=null;
-const meta={lvl:1,xp:0,coins:0,found:new Set(),exp:0};
+const meta={lvl:1,xp:0,coins:0,found:new Set(),exp:0,inv:{}};
 /* ============ persistence (localStorage — works on real origins like GitHub Pages) ============ */
 const SAVE_KEY='strata-save-v1';
 function saveMeta(){try{
- localStorage.setItem(SAVE_KEY,JSON.stringify({lvl:meta.lvl,xp:meta.xp,coins:meta.coins,found:[...meta.found],exp:meta.exp}))
+ localStorage.setItem(SAVE_KEY,JSON.stringify({lvl:meta.lvl,xp:meta.xp,coins:meta.coins,found:[...meta.found],exp:meta.exp,inv:meta.inv}))
 }catch(e){/* storage unavailable (private mode / sandboxed) — play session-only */}}
 function loadMeta(){try{
  const s=JSON.parse(localStorage.getItem(SAVE_KEY)||'null');
@@ -504,6 +504,8 @@ function loadMeta(){try{
  meta.lvl=Math.max(1,s.lvl|0);meta.xp=Math.max(0,+s.xp||0);
  meta.coins=Math.max(0,s.coins|0);meta.exp=Math.max(0,s.exp|0);
  meta.found=new Set(Array.isArray(s.found)?s.found:[]);
+ meta.inv=(s.inv&&typeof s.inv==='object')?s.inv:{};
+ if(!s.inv)for(const id of meta.found)meta.inv[id]=1; // migrate pre-inventory saves: 1 of each catalogued item
  return true
 }catch(e){return false}}
 const state={energy:0,maxE:0,tool:'trowel',digCount:0,finds:[],scans:3,scanUntil:0};
@@ -665,7 +667,7 @@ function updateExposure(rx,ry,rw,rh){
 function recover(o){
  o.recovered=true;o.exp=1;
  const d=o.def,rc=RARITY[d.rar];
- meta.coins+=d.val;state.finds.push(d);meta.found.add(d.id);
+ meta.coins+=d.val;state.finds.push(d);meta.found.add(d.id);meta.inv[d.id]=(meta.inv[d.id]||0)+1;
  glows.push({x:o.x,y:o.y,r:o.half,t:0});
  toast('<b style="color:'+rc.c+'">'+d.name+'</b> recovered! <span class="rar" style="background:'+rc.c+'22;color:'+rc.c+'">'+rc.n+'</span> +🪙'+d.val,rc.c);
  addXP(d.xp);hud();saveMeta();
@@ -784,12 +786,13 @@ function showStart(){ui.mode='menu';ui.prev=null;
   +'<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">'
   +'<input type="text" id="seedIn" value="'+suggestSeed()+'" maxlength="24">'
   +'<button class="btn2" id="rndSeed">🎲 New site</button>'
-  +'<div style="flex:1"></div><button class="btn2" id="musBtn">🏛 Museum</button>'
+  +'<div style="flex:1"></div><button class="btn2" id="trdBtn">🤝 Trade</button><button class="btn2" id="musBtn">🏛 Museum</button>'
   +'<button class="btn" id="goBtn">Begin Expedition</button></div>'
   +'<div class="sub" style="margin-top:14px">'+(TOUCH?'Pinch to zoom · ✋ to pan':'Scroll to zoom · right-drag or ✋ to pan')+' · 📡 scanners hint at what lies beneath · switch to a ⛏ pickaxe when you hit rock. Watch your ⚡ energy — every scoop costs some.</div></div>';
  m.querySelectorAll('.brow').forEach(el=>el.onclick=()=>{startSel=el.dataset.b;showStart()});
  document.getElementById('rndSeed').onclick=()=>{document.getElementById('seedIn').value=suggestSeed()};
  document.getElementById('musBtn').onclick=()=>showMuseum();
+ document.getElementById('trdBtn').onclick=()=>showTrade();
  document.getElementById('goBtn').onclick=()=>{
   const s=document.getElementById('seedIn').value.trim()||suggestSeed();
   startExpedition(startSel,s)};
@@ -850,6 +853,172 @@ function showMuseum(){
   if(p==='play'){m.classList.add('hidden');ui.mode='play'}
   else if(p==='summary')endExpedition();
   else showStart()};
+}
+/* ============ trading (Supabase Realtime broadcast — no tables needed) ============
+   Two players enter the same room code anywhere in the world; offers relay through
+   a Supabase Realtime channel. Fill in the two constants below from your Supabase
+   dashboard → Project Settings → API. The anon key is public by design. */
+const SB_URL='';  https://fqzqgslpobpuudexbxcf.supabase.co
+const SB_KEY=''; sb_publishable_hJh6invS7pYFBhhCK38wLw_rXzgGO4A
+let sb=null,trade=null;
+function loadSupabase(){return new Promise((res,rej)=>{
+ if(window.supabase)return res();
+ const s=document.createElement('script');
+ s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+ s.onload=res;s.onerror=()=>rej(new Error('Could not load Supabase library'));
+ document.head.appendChild(s)})}
+function tradeCodeSuggest(){const c='ABCDEFGHJKMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<6;i++)s+=c[Math.random()*c.length|0];return s}
+function leaveTrade(){if(trade&&trade.ch&&sb)sb.removeChannel(trade.ch);trade=null}
+async function joinTradeRoom(code){
+ try{
+  await loadSupabase();
+  if(!sb)sb=window.supabase.createClient(SB_URL,SB_KEY);
+ }catch(e){toast('⚠ Trade unavailable: '+e.message,'#e86c5b');return}
+ leaveTrade();
+ trade={code,ch:null,peers:1,done:false,
+  my:{coins:0,items:{},v:0},their:{coins:0,items:{},v:0},
+  iAcceptedV:0,theyAcceptedV:0};
+ const ch=sb.channel('strata-trade-'+code,{config:{broadcast:{self:false},presence:{key:'p'+Math.random().toString(36).slice(2,9)}}});
+ trade.ch=ch;
+ ch.on('presence',{event:'sync'},()=>{
+  if(!trade)return;
+  const n=Object.keys(ch.presenceState()).length;
+  const had=trade.peers;trade.peers=n;
+  if(n>had&&n===2){toast('🤝 Trader joined the room','#8fe86c');sendOffer()}
+  if(n<had&&!trade.done)toast('👋 Trader left the room','#e8b34b');
+  if(ui.mode==='trade')showTrade()});
+ ch.on('broadcast',{event:'offer'},({payload:p})=>{
+  if(!trade||trade.done||!p)return;
+  trade.their={coins:Math.max(0,p.coins|0),items:(p.items&&typeof p.items==='object')?p.items:{},v:p.v|0};
+  // their offer changed → my old acceptance is void (version no longer matches)
+  if(ui.mode==='trade')showTrade();
+  checkCommit()});
+ ch.on('broadcast',{event:'accept'},({payload:p})=>{
+  if(!trade||trade.done||!p)return;
+  if((p.v|0)===trade.my.v)trade.theyAcceptedV=p.v|0;
+  if(ui.mode==='trade')showTrade();
+  checkCommit()});
+ ch.on('broadcast',{event:'done'},({payload:p})=>{
+  // peer committed: if it matches current versions and we accepted their offer, commit too
+  if(!trade||trade.done||!p)return;
+  if((p.gotV|0)===trade.my.v&&(p.gaveV|0)===trade.their.v&&trade.iAcceptedV===trade.their.v){
+   trade.theyAcceptedV=trade.my.v;checkCommit()}});
+ ch.subscribe(st=>{
+  if(!trade)return;
+  if(st==='SUBSCRIBED'){ch.track({t:Date.now()});if(ui.mode==='trade')showTrade()}
+  if(st==='CHANNEL_ERROR'||st==='TIMED_OUT')toast('⚠ Trade connection lost','#e86c5b')});
+}
+function sendOffer(){
+ if(!trade||!trade.ch||trade.done)return;
+ trade.my.v++;trade.theyAcceptedV=0; // their acceptance of my OLD offer is void; my acceptance of THEIR unchanged offer stands
+ trade.ch.send({type:'broadcast',event:'offer',payload:trade.my});
+}
+function sendAccept(){
+ if(!trade||!trade.ch||trade.done||trade.their.v===0&&trade.my.v===0)return;
+ trade.iAcceptedV=trade.their.v;
+ trade.ch.send({type:'broadcast',event:'accept',payload:{v:trade.their.v}});
+ showTrade();checkCommit();
+}
+function checkCommit(){
+ if(!trade||trade.done)return;
+ if(trade.iAcceptedV!==trade.their.v||trade.theyAcceptedV!==trade.my.v)return;
+ if(trade.my.v===0&&trade.their.v===0)return;
+ // tell the peer we're committing — insurance against a lost 'accept' stranding one side
+ try{trade.ch.send({type:'broadcast',event:'done',payload:{gaveV:trade.my.v,gotV:trade.their.v}})}catch(e){}
+ trade.done=true;
+ // give (clamped to what we actually hold — belt & braces)
+ const gc=clamp(trade.my.coins|0,0,meta.coins);meta.coins-=gc;
+ for(const id in trade.my.items){const n=Math.min(trade.my.items[id]|0,meta.inv[id]||0);
+  if(n>0){meta.inv[id]-=n;if(meta.inv[id]<=0)delete meta.inv[id]}}
+ // receive (only known catalog items, sane counts)
+ let got=0;
+ meta.coins+=Math.max(0,trade.their.coins|0);
+ for(const id in trade.their.items){if(!CATALOG[id])continue;
+  const n=clamp(trade.their.items[id]|0,0,99);
+  if(n>0){meta.inv[id]=(meta.inv[id]||0)+n;if(!meta.found.has(id)){meta.found.add(id);got++}}}
+ saveMeta();hud();
+ toast('🤝 Trade complete!'+(got?' '+got+' new museum '+(got>1?'entries':'entry')+' catalogued!':''),'#8fe86c');
+ leaveTrade();showStart();
+}
+function adjOffer(id,delta){
+ if(!trade||trade.done)return;
+ const have=meta.inv[id]||0;
+ const cur=trade.my.items[id]|0;
+ const next=clamp(cur+delta,0,have);
+ if(next===cur)return;
+ if(next===0)delete trade.my.items[id];else trade.my.items[id]=next;
+ sendOffer();showTrade();
+}
+function offerRows(items,mine){
+ let h='';
+ const ids=mine?Object.keys(meta.inv):Object.keys(items);
+ for(const id of ids){const d=CATALOG[id];if(!d)continue;
+  const have=meta.inv[id]||0,n=items[id]|0;
+  if(!mine&&n<=0)continue;
+  const rc=RARITY[d.rar];
+  h+='<div class="frow">'+iconHTML(d,34)
+   +'<div style="flex:1;min-width:0"><b style="font-size:12px">'+d.name+'</b>'
+   +'<div style="font-size:10px;color:'+rc.c+'">'+rc.n+(mine?' · own '+have:'')+'</div></div>'
+   +(mine
+    ?'<button class="btn2 tminus" data-id="'+id+'" style="padding:2px 10px">−</button>'
+     +'<span style="width:22px;text-align:center;font-size:13px">'+n+'</span>'
+     +'<button class="btn2 tplus" data-id="'+id+'" style="padding:2px 10px">+</button>'
+    :'<span style="font-size:13px">×'+n+'</span>')
+   +'</div>'}
+ if(!h)h='<div class="sub" style="margin:6px 0">'+(mine?'No items yet — dig some up first!':'Nothing offered yet')+'</div>';
+ return h}
+function showTrade(){
+ ui.mode='trade';
+ const m=document.getElementById('modal');m.classList.remove('hidden');
+ if(!SB_URL||!SB_KEY){
+  m.innerHTML='<div class="panel"><h2>🤝 Trading</h2>'
+   +'<div class="sub">Trading isn\'t configured yet. The site owner needs to fill in SB_URL and SB_KEY in index.html (Supabase dashboard → Project Settings → API).</div>'
+   +'<div style="text-align:right"><button class="btn" id="trdBack">Back</button></div></div>';
+  document.getElementById('trdBack').onclick=()=>{showStart()};return}
+ if(!trade){
+  m.innerHTML='<div class="panel"><h2>🤝 Trade with a friend</h2>'
+   +'<div class="sub">Both players enter the <b>same room code</b> — share it however you like. Works across any two devices, anywhere.</div>'
+   +'<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">'
+   +'<input type="text" id="trdCode" value="'+tradeCodeSuggest()+'" maxlength="12">'
+   +'<button class="btn" id="trdJoin">Enter room</button>'
+   +'<div style="flex:1"></div><button class="btn2" id="trdBack">Back</button></div></div>';
+  document.getElementById('trdJoin').onclick=()=>{
+   const c=document.getElementById('trdCode').value.trim().toUpperCase();
+   if(c.length<4){toast('Code must be at least 4 characters','#e8b34b');return}
+   joinTradeRoom(c);showTrade()};
+  document.getElementById('trdBack').onclick=()=>{showStart()};return}
+ // in a room
+ const t=trade,waiting=t.peers<2,crowded=t.peers>2;
+ const iAcc=t.iAcceptedV>0&&t.iAcceptedV===t.their.v;
+ const theyAcc=t.theyAcceptedV===t.my.v&&t.my.v>0;
+ let body;
+ if(waiting){
+  body='<div class="sub" style="margin:18px 0">Room <b style="color:#f0d891;letter-spacing:2px">'+t.code+'</b> — waiting for your trade partner to enter the same code…</div>';
+ }else{
+  body=(crowded?'<div class="sub" style="color:#e86c5b">⚠ More than 2 people are in this room — trading is paused. Pick a fresh code.</div>':'')
+   +'<div style="display:flex;gap:14px;flex-wrap:wrap">'
+   +'<div style="flex:1;min-width:220px"><h2 style="font-size:14px">You offer</h2>'
+   +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:13px">🪙</span>'
+   +'<input type="text" id="trdCoins" value="'+(t.my.coins||0)+'" maxlength="7" style="width:80px"><span class="sub" style="margin:0">of '+meta.coins+'</span></div>'
+   +'<div style="max-height:200px;overflow:auto">'+offerRows(t.my.items,true)+'</div></div>'
+   +'<div style="flex:1;min-width:220px"><h2 style="font-size:14px">They offer</h2>'
+   +'<div style="font-size:13px;margin-bottom:6px">🪙 '+(t.their.coins||0)+'</div>'
+   +'<div style="max-height:200px;overflow:auto">'+offerRows(t.their.items,false)+'</div></div></div>'
+   +'<div class="sub" style="margin-top:10px">'+(theyAcc?'✅ They accepted your current offer. ':'')+(iAcc?'✅ You accepted their offer — waiting on them.':'Changing any offer resets acceptances on both sides.')+'</div>';
+ }
+ m.innerHTML='<div class="panel"><h2>🤝 Trading — room '+t.code+'</h2>'+body
+  +'<div style="display:flex;gap:10px;margin-top:14px"><button class="btn2" id="trdLeave">Leave</button><div style="flex:1"></div>'
+  +(!waiting&&!crowded?'<button class="btn" id="trdAccept"'+(iAcc?' disabled style="opacity:.5"':'')+'>Accept trade</button>':'')
+  +'</div></div>';
+ document.getElementById('trdLeave').onclick=()=>{leaveTrade();showStart()};
+ const ab=document.getElementById('trdAccept');if(ab)ab.onclick=sendAccept;
+ const ci=document.getElementById('trdCoins');
+ if(ci)ci.onchange=()=>{
+  const v=clamp(parseInt(ci.value,10)||0,0,meta.coins);
+  if(v!==t.my.coins){t.my.coins=v;sendOffer()}
+  showTrade()};
+ m.querySelectorAll('.tplus').forEach(b=>b.onclick=()=>adjOffer(b.dataset.id,1));
+ m.querySelectorAll('.tminus').forEach(b=>b.onclick=()=>adjOffer(b.dataset.id,-1));
 }
 /* ============ main loop ============ */
 function frame(now){
