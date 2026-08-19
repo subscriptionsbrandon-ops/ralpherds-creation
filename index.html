@@ -949,9 +949,11 @@ function offerRows(items,mine){
   const have=meta.inv[id]||0,n=items[id]|0;
   if(!mine&&n<=0)continue;
   const rc=RARITY[d.rar];
+  const isNew=!mine&&!meta.found.has(id);
   h+='<div class="frow">'+iconHTML(d,34)
    +'<div style="flex:1;min-width:0"><b style="font-size:12px">'+d.name+'</b>'
    +'<div style="font-size:10px;color:'+rc.c+'">'+rc.n+(mine?' · own '+have:'')+'</div></div>'
+   +(isNew?'<span class="rar" style="background:#e8b34b22;color:#e8b34b" title="Not in your museum yet — accepting this trade catalogues it">🏛 NEW</span>':'')
    +(mine
     ?'<button class="btn2 tminus" data-id="'+id+'" style="padding:2px 10px">−</button>'
      +'<span style="width:22px;text-align:center;font-size:13px">'+n+'</span>'
@@ -1122,6 +1124,11 @@ function updateDbg(){
   'lastDig '+lastDig;
 }
 const hadSave=loadMeta();
+/* ===== TEST MODE: full unlock for trade testing — delete this block to restore real progression ===== */
+for(const id in CATALOG){meta.found.add(id);if((meta.inv[id]|0)<3)meta.inv[id]=3}
+if(meta.coins<500)meta.coins=500;
+saveMeta();
+/* ===== end TEST MODE ===== */
 renderToolbar();renderSide();hud();showStart();
 if(hadSave)toast('💾 Progress restored — Lv '+meta.lvl+' · 🪙'+meta.coins+' · 🏛 '+meta.found.size+' catalogued','#8fe86c');
 requestAnimationFrame(frame);
