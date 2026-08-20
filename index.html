@@ -37,6 +37,14 @@
           var r = e.reason
           show('Unhandled promise rejection: ' + (r && r.stack ? r.stack : String(r)))
         })
+        // Catches a Content-Security-Policy block on the module script
+        // below (e.g. from a device-management profile, parental-control
+        // software, or a strict privacy extension) — that's a security
+        // enforcement, not a JS error, so it would never reach the
+        // listeners above and would otherwise stay just as invisible.
+        document.addEventListener('securitypolicyviolation', function (e) {
+          show('Blocked by Content-Security-Policy: ' + e.violatedDirective + '\nblocked URI: ' + e.blockedURI)
+        })
       })()
     </script>
   </head>
