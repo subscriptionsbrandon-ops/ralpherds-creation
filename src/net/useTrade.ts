@@ -11,6 +11,7 @@
 // only fetched here.
 import { useCallback, useRef, useState } from 'react'
 import type { RealtimeChannel, SupabaseClient } from '@supabase/supabase-js'
+import { Handshake, LogOut, TriangleAlert } from 'lucide-react'
 import { useGameStore } from '@/state/gameStore'
 import { CATALOG } from '@/data/catalog'
 
@@ -74,7 +75,11 @@ export function useTrade() {
       .applyTradeResult(t.their.coins - t.my.coins, t.their.items, t.my.items)
     useGameStore
       .getState()
-      .pushToast('🤝 Trade complete!' + (newlyCatalogued ? ' ' + newlyCatalogued + ' new museum ' + (newlyCatalogued > 1 ? 'entries' : 'entry') + ' catalogued!' : ''), '#8fe86c')
+      .pushToast(
+        'Trade complete!' + (newlyCatalogued ? ' ' + newlyCatalogued + ' new museum ' + (newlyCatalogued > 1 ? 'entries' : 'entry') + ' catalogued!' : ''),
+        '#8fe86c',
+        Handshake,
+      )
     leaveRoom()
     useGameStore.getState().showStart()
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -102,7 +107,12 @@ export function useTrade() {
         ;({ createClient } = await import('@supabase/supabase-js'))
         if (!sbRef.current) sbRef.current = createClient(SB_URL, SB_KEY)
       } catch (e) {
-        useGameStore.getState().pushToast('⚠ Trade unavailable: ' + (e instanceof Error ? e.message : String(e)), '#e86c5b')
+        // e.message renders as plain text via Toast.text (see ToastStack.tsx),
+        // never as HTML, so an unusual/unexpected error message here can't
+        // execute anything — it can only ever end up as literal displayed
+        // characters, whatever the message from the SDK/network turns out
+        // to say. Don't reintroduce dangerouslySetInnerHTML on this field.
+        useGameStore.getState().pushToast('Trade unavailable: ' + (e instanceof Error ? e.message : String(e)), '#e86c5b', TriangleAlert)
         return
       }
       leaveRoom()
@@ -130,10 +140,10 @@ export function useTrade() {
         const had = tradeRef.current.peers
         apply({ peers: n })
         if (n > had && n === 2) {
-          useGameStore.getState().pushToast('🤝 Trader joined the room', '#8fe86c')
+          useGameStore.getState().pushToast('Trader joined the room', '#8fe86c', Handshake)
           sendOffer()
         }
-        if (n < had && !tradeRef.current.done) useGameStore.getState().pushToast('👋 Trader left the room', '#e8b34b')
+        if (n < had && !tradeRef.current.done) useGameStore.getState().pushToast('Trader left the room', '#e8b34b', LogOut)
       })
       ch.on('broadcast', { event: 'offer' }, ({ payload: p }: { payload: TradeOffer }) => {
         const t = tradeRef.current
@@ -159,7 +169,8 @@ export function useTrade() {
       ch.subscribe((status: string) => {
         if (!tradeRef.current) return
         if (status === 'SUBSCRIBED') ch.track({ t: Date.now() })
-        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') useGameStore.getState().pushToast('⚠ Trade connection lost', '#e86c5b')
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT')
+          useGameStore.getState().pushToast('Trade connection lost', '#e86c5b', TriangleAlert)
       })
     },
     [apply, checkCommit, leaveRoom, sendOffer],

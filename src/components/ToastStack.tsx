@@ -1,14 +1,16 @@
 // Recovery/level-up/error toast queue — ported from
-// legacy/strata-original.html's #toast + toast(). Messages are internally
-// generated strings (item names come from our own CATALOG, never raw
-// network/user input), so rendering them as HTML — same as the original —
-// is safe here.
+// legacy/strata-original.html's #toast + toast(). Renders as plain React
+// text + an optional icon component, never raw HTML — see the Toast.text
+// doc comment in gameStore.ts for why (a caught error's `.message` ended up
+// flowing through here once; nothing that reaches this field should ever
+// be treated as markup).
 import { useEffect, useState } from 'react'
 import { useGameStore, type Toast } from '@/state/gameStore'
 
 function ToastItem({ toast }: { toast: Toast }) {
   const removeToast = useGameStore((s) => s.removeToast)
   const [fading, setFading] = useState(false)
+  const Icon = toast.icon
 
   useEffect(() => {
     const fadeTimer = window.setTimeout(() => setFading(true), 3200)
@@ -22,10 +24,12 @@ function ToastItem({ toast }: { toast: Toast }) {
 
   return (
     <div
-      className="animate-toast-in rounded-[10px] border border-white/[0.14] bg-black/[0.87] px-4 py-2 text-sm shadow-[0_4px_18px_rgba(0,0,0,.4)] transition-opacity duration-500"
+      className="animate-toast-in flex items-center gap-1.5 rounded-[10px] border border-white/[0.14] bg-black/[0.87] px-4 py-2 text-sm shadow-[0_4px_18px_rgba(0,0,0,.4)] transition-opacity duration-500"
       style={{ borderColor: toast.color, opacity: fading ? 0 : 1 }}
-      dangerouslySetInnerHTML={{ __html: toast.html }}
-    />
+    >
+      {Icon && <Icon className="h-4 w-4 shrink-0" style={{ color: toast.color }} />}
+      {toast.text}
+    </div>
   )
 }
 

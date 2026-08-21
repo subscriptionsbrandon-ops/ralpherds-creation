@@ -4,6 +4,7 @@
 // event on pointerdown (see Hud.tsx) instead of this file reaching into the
 // DOM for it, since there's no `#topL` element id to grab anymore.
 import { useEffect, useRef, useState } from 'react'
+import { Bug } from 'lucide-react'
 import { tryGetEngine } from '@/engine/engineInstance'
 import { DEBUG_TAP_EVENT } from '@/lib/debugTap'
 
@@ -59,9 +60,9 @@ export function DebugOverlay() {
     <>
       <button
         onClick={() => setDbgOn((v) => !v)}
-        className="fixed left-1/2 top-[calc(8px+env(safe-area-inset-top,0px))] z-[31] h-7 w-[34px] -translate-x-1/2 rounded-lg border border-white/20 bg-black/80 p-0 text-sm"
+        className="fixed left-1/2 top-[calc(8px+env(safe-area-inset-top,0px))] z-[31] flex h-7 w-[34px] -translate-x-1/2 items-center justify-center rounded-lg border border-white/20 bg-black/80 p-0 text-sm"
       >
-        🐞
+        <Bug className="h-4 w-4 text-[#7dff9f]" />
       </button>
       {dbgOn && (
         <div className="fixed bottom-[calc(140px+var(--vvb,0px))] left-2 z-30 max-w-[70vw] whitespace-pre rounded-lg bg-black/[0.72] px-2 py-1.5 font-mono text-[11px] text-[#7dff9f]">

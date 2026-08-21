@@ -1,6 +1,7 @@
 // Top location/energy/coins/level chips — ported from legacy/strata-original.html's
 // #topL/#topR + hud().
 import type { ReactNode } from 'react'
+import { Coins, Zap } from 'lucide-react'
 import { useGameStore, xpNeeded } from '@/state/gameStore'
 import { BIOMES } from '@/data/biomes'
 import { dispatchDebugTap } from '@/lib/debugTap'
@@ -56,10 +57,12 @@ export function Hud() {
       </div>
       <div className="fixed right-2.5 top-2.5 z-[5] flex flex-wrap items-center justify-end gap-2">
         <Chip>
-          ⚡ <span>{Math.max(0, Math.ceil(energy))}</span>
+          <Zap className="inline h-3.5 w-3.5 -translate-y-px align-middle" /> <span>{Math.max(0, Math.ceil(energy))}</span>
           <Bar pct={energyPct} colorClass="bg-gradient-to-r from-[#e8b34b] to-[#f0d078]" />
         </Chip>
-        <Chip>🪙 {coins}</Chip>
+        <Chip>
+          <Coins className="inline h-3.5 w-3.5 -translate-y-px align-middle" /> {coins}
+        </Chip>
         <Chip>
           Lv {lvl}
           <Bar pct={xpPct} colorClass="bg-gradient-to-r from-[#7db2e8] to-[#9fd0f0]" />

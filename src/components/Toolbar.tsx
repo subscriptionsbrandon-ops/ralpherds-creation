@@ -15,6 +15,7 @@ export function Toolbar() {
       {TOOL_ORDER.map((id) => {
         const t = TOOLS[id]
         const active = tool === id
+        const Icon = t.icon
         return (
           <button
             key={id}
@@ -24,7 +25,7 @@ export function Toolbar() {
               active && 'border-primary bg-[rgba(60,45,20,.8)] text-[#f2d992] shadow-[0_0_12px_rgba(232,179,75,.25)]',
             )}
           >
-            <div className="text-[17px] max-[600px]:text-[15px]">{t.icon}</div>
+            <Icon className="h-[18px] w-[18px] max-[600px]:h-4 max-[600px]:w-4" strokeWidth={2} />
             {t.n}
           </button>
         )

@@ -1,6 +1,7 @@
 // Collected-items catalog — ported from legacy/strata-original.html's
 // showMuseum().
 import { lazy, Suspense, useEffect, useState } from 'react'
+import { Landmark } from 'lucide-react'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -45,7 +46,10 @@ export function MuseumModal() {
   return (
     <Dialog open={open} onOpenChange={() => {}}>
       <DialogContent hideClose onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
-        <DialogTitle className="text-lg">🏛 Museum Collection</DialogTitle>
+        <DialogTitle className="flex items-center gap-2 text-lg">
+          <Landmark className="h-5 w-5 text-primary" />
+          Museum Collection
+        </DialogTitle>
         <p className="-mt-2 text-sm text-muted-foreground">
           {found.size} of {total} discoveries catalogued · reputation grows with every recovery
         </p>
