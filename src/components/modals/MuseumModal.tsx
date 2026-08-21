@@ -16,6 +16,7 @@ export function MuseumModal() {
   const musTab = useGameStore((s) => s.musTab)
   const setMusTab = useGameStore((s) => s.setMusTab)
   const found = useGameStore((s) => s.found)
+  const inv = useGameStore((s) => s.inv)
   const closeMuseum = useGameStore((s) => s.closeMuseum)
 
   const items = Object.values(CATALOG).filter((d) => musTab === 'All' || d.cat === musTab)
@@ -42,13 +43,22 @@ export function MuseumModal() {
         <div className="grid grid-cols-[repeat(auto-fill,minmax(92px,1fr))] gap-2">
           {items.map((d) => {
             const has = found.has(d.id)
+            const count = inv[d.id] || 0
             const rc = RARITY[d.rar]
             return (
               <div
                 key={d.id}
-                className="rounded-[10px] border border-white/[0.08] bg-white/[0.02] px-1 py-2 text-center"
+                className="relative rounded-[10px] border border-white/[0.08] bg-white/[0.02] px-1 py-2 text-center"
                 style={has ? { borderColor: rc.c + '55' } : undefined}
               >
+                {has && count > 0 && (
+                  <span
+                    className="absolute right-1 top-1 rounded-full bg-black/70 px-[6px] py-px text-[10px] font-semibold leading-tight text-[#e8e2d4]"
+                    aria-label={`${count} owned`}
+                  >
+                    ×{count}
+                  </span>
+                )}
                 <ItemIcon def={d} size={50} silhouette={!has} />
                 <div className="mt-1 text-[10px] text-[#bdb49e]">{has ? d.name : '???'}</div>
               </div>
