@@ -25,6 +25,19 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+      # Temporary diagnostic: print exactly what got built and what's about
+      # to be uploaded, so it's visible in the run log rather than assumed
+      # to match a local build. The live site keeps serving /src/main.tsx
+      # (a source file that only exists pre-build) even after locking Pages'
+      # Source to this Actions workflow, which means either this job isn't
+      # producing the build we expect, or something downstream of upload
+      # isn't serving what it uploads — this narrows down which.
+      - name: Show what's being deployed
+        run: |
+          echo "--- dist/ contents ---"
+          find dist -type f
+          echo "--- dist/index.html ---"
+          cat dist/index.html
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
