@@ -1,24 +1,27 @@
 // Renders one catalog item as a real 3D model inside a react-three-fiber
-// <Canvas> — the category's sourced .glb (see src/data/models.ts),
-// normalized to a consistent on-screen size and tinted toward the item's
-// rarity color. Each mount gets its own cloned scene/materials so multiple
-// instances of the same category model (e.g. two different Gems items)
-// don't fight over shared material state.
+// <Canvas> — the item's sourced .glb (see src/data/models.ts, which picks a
+// specific model per item where a good real match exists, falling back to
+// one shared model per category otherwise), normalized to a consistent
+// on-screen size and tinted toward the item's own color (or its rarity
+// color, for items with no defined color of their own). Each mount gets its
+// own cloned scene/materials so multiple instances of the same underlying
+// model (e.g. two Minerals items sharing a fallback rock) don't fight over
+// shared material state.
 import { useMemo } from 'react'
 import { useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
-import { CATEGORY_MODELS } from '@/data/models'
-import { RARITY } from '@/data/rarity'
-import type { CategoryId, RarityId } from '@/engine/types'
+import { getModelForItem, getTint } from '@/data/models'
+import type { ItemDef } from '@/engine/types'
 
-export function ItemModel({ cat, rar }: { cat: CategoryId; rar: RarityId }) {
-  const { url, scale, rotationY, rotationX = 0 } = CATEGORY_MODELS[cat]
+export function ItemModel({ def }: { def: ItemDef }) {
+  const { url, scale, rotationY = 0, rotationX = 0 } = getModelForItem(def)
+  const { color: tint, strength: tintStrength } = getTint(def)
   const { scene } = useGLTF(url)
 
   const { object, offset, factor } = useMemo(() => {
     const obj = scene.clone(true)
 
-    // Some of these game-asset exports (MomusPark's rock props) bundle a
+    // Some of these game-asset exports (rock props in particular) bundle a
     // separate invisible physics-collision mesh alongside the real one —
     // e.g. a node literally named "Rock_04_collider" sitting right next to
     // "Rock_04_Art". Rendering it too looks like the model shattered into a
@@ -31,14 +34,28 @@ export function ItemModel({ cat, rar }: { cat: CategoryId; rar: RarityId }) {
     })
     colliders.forEach((node) => node.parent?.remove(node))
 
-    const tintColor = new THREE.Color(RARITY[rar].c)
+    const tintColor = new THREE.Color(tint)
     const tintMaterial = (m: THREE.Material) => {
       const clone = m.clone()
       if ('color' in clone && clone.color instanceof THREE.Color) {
-        // Light lerp toward the rarity color rather than a full replace —
-        // keeps the source model's own texture/shading legible while still
-        // giving the same rarity-coded cue the flat icons use.
-        clone.color = clone.color.clone().lerp(tintColor, 0.35)
+        // Lerp toward the target color rather than a full replace — keeps
+        // the source model's own texture/shading legible while still
+        // giving each item a correct, recognizable color identity.
+        clone.color = clone.color.clone().lerp(tintColor, tintStrength)
+      }
+      // `color` is a multiplier over the material's texture map — on a
+      // model with a dark baked-in texture (e.g. the ring/idol busts,
+      // both quite dark natively), multiplying by an even-brighter color
+      // still can't lift it past that texture's own dark pixels, so a
+      // color-only tint reads as barely-changed no matter how strong.
+      // Adding a touch of emissive glow actually adds light instead of
+      // just multiplying it, which is the only way to visibly warm up a
+      // model that's dark to begin with. Scaled by tintStrength so this
+      // stays subtle for the plain rarity-fallback case (where the model's
+      // own look should stay dominant) and only meaningful for items with
+      // a real intended color to show.
+      if ('emissive' in clone && clone.emissive instanceof THREE.Color) {
+        clone.emissive = tintColor.clone().multiplyScalar(tintStrength * 0.35)
       }
       return clone
     }
@@ -60,7 +77,7 @@ export function ItemModel({ cat, rar }: { cat: CategoryId; rar: RarityId }) {
     const maxDim = Math.max(size.x, size.y, size.z) || 1
 
     return { object: obj, offset: center, factor: (1 / maxDim) * scale }
-  }, [scene, rar, scale])
+  }, [scene, tint, tintStrength, scale])
 
   return (
     <group rotation={[rotationX, rotationY, 0]}>

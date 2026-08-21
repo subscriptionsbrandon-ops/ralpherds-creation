@@ -33,7 +33,7 @@ export function ItemInspectModal({ item, onClose }: { item: ItemDef | null; onCl
                 <directionalLight position={[3, 5, 4]} intensity={1.3} />
                 <directionalLight position={[-3, -1, -2]} intensity={0.4} />
                 <Suspense fallback={null}>
-                  <ItemModel cat={item.cat} rar={item.rar} />
+                  <ItemModel def={item} />
                 </Suspense>
                 <OrbitControls
                   enablePan={false}
