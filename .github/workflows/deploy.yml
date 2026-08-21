@@ -36,5 +36,13 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      # Explicitly locks GitHub Pages to serve from this Actions build
+      # instead of a raw branch checkout. Without this, deploy-pages can
+      # report success as an isolated API call without Pages' Source
+      # setting actually being "GitHub Actions" — which can result in the
+      # live site serving the repo's raw index.html (referencing
+      # /src/main.tsx, a source file no browser can run) instead of the
+      # built dist/ output this workflow actually produces.
+      - uses: actions/configure-pages@v5
       - id: deployment
         uses: actions/deploy-pages@v4
