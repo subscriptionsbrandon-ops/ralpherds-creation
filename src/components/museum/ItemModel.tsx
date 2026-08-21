@@ -17,6 +17,20 @@ export function ItemModel({ cat, rar }: { cat: CategoryId; rar: RarityId }) {
 
   const { object, offset, factor } = useMemo(() => {
     const obj = scene.clone(true)
+
+    // Some of these game-asset exports (MomusPark's rock props) bundle a
+    // separate invisible physics-collision mesh alongside the real one —
+    // e.g. a node literally named "Rock_04_collider" sitting right next to
+    // "Rock_04_Art". Rendering it too looks like the model shattered into a
+    // second floating chunk, since it's a rough, differently-shaped proxy
+    // never meant to be seen. Strip anything named like a collider before
+    // it's tinted or counted toward the model's bounding box.
+    const colliders: THREE.Object3D[] = []
+    obj.traverse((child) => {
+      if (/collider|collision/i.test(child.name)) colliders.push(child)
+    })
+    colliders.forEach((node) => node.parent?.remove(node))
+
     const tintColor = new THREE.Color(RARITY[rar].c)
     const tintMaterial = (m: THREE.Material) => {
       const clone = m.clone()
