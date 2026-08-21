@@ -1,5 +1,6 @@
 // Expedition results screen — ported from legacy/strata-original.html's
 // endExpedition() modal build.
+import { Coins, Landmark, Radar, Sparkles } from 'lucide-react'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -35,7 +36,9 @@ export function SummaryModal() {
 
         {finds.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            Nothing recovered this time. Try the 📡 scanner early, and dig where the ground hints at something.
+            Nothing recovered this time. Try the{' '}
+            <Radar className="inline h-3.5 w-3.5 -translate-y-px align-middle" /> scanner early, and dig where the
+            ground hints at something.
           </p>
         ) : (
           <div className="max-h-[40vh] overflow-auto">
@@ -49,25 +52,33 @@ export function SummaryModal() {
                     <div className="text-[11px] text-muted-foreground">{d.cat}</div>
                   </div>
                   <Badge style={{ background: rc.c + '22', color: rc.c }}>{rc.n}</Badge>
-                  <span className="w-16 text-right text-sm">🪙{d.val}</span>
+                  <span className="flex w-16 items-center justify-end gap-0.5 text-right text-sm">
+                    <Coins className="h-3.5 w-3.5" />
+                    {d.val}
+                  </span>
                 </div>
               )
             })}
           </div>
         )}
 
-        <div className="flex gap-4 text-sm">
-          <span>🪙 +{totalCoins}</span>
-          <span>✨ +{totalXp} XP</span>
+        <div className="flex flex-wrap gap-4 text-sm">
+          <span className="inline-flex items-center gap-1">
+            <Coins className="h-4 w-4" /> +{totalCoins}
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <Sparkles className="h-4 w-4" /> +{totalXp} XP
+          </span>
           <span>Level {lvl}</span>
-          <span>
-            🏛 {found.size}/{Object.keys(CATALOG).length}
+          <span className="inline-flex items-center gap-1">
+            <Landmark className="h-4 w-4" />
+            {found.size}/{Object.keys(CATALOG).length}
           </span>
         </div>
 
         <div className="flex gap-2.5">
           <Button variant="secondary" onClick={openMuseum}>
-            🏛 Museum
+            <Landmark className="h-4 w-4" /> Museum
           </Button>
           <div className="flex-1" />
           <Button onClick={showStart}>New Expedition</Button>

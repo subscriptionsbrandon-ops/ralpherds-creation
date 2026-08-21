@@ -1,6 +1,7 @@
 // Peer-to-peer trading UI — ported from legacy/strata-original.html's
 // showTrade()/offerRows(). Protocol logic lives in src/net/useTrade.ts.
 import { useState } from 'react'
+import { CheckCircle2, Coins, Handshake, Landmark, TriangleAlert } from 'lucide-react'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -46,10 +47,11 @@ function OfferRows({
           </div>
           {isNew && (
             <Badge
+              className="inline-flex items-center gap-0.5"
               style={{ background: '#e8b34b22', color: '#e8b34b' }}
               title="Not in your museum yet — accepting this trade catalogues it"
             >
-              🏛 NEW
+              <Landmark className="h-2.5 w-2.5" /> NEW
             </Badge>
           )}
           {mine ? (
@@ -95,7 +97,9 @@ export function TradeModal() {
     return (
       <Dialog open={open} onOpenChange={() => {}}>
         <DialogContent hideClose onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
-          <DialogTitle className="text-lg">🤝 Trading</DialogTitle>
+          <DialogTitle className="flex items-center gap-2 text-lg">
+            <Handshake className="h-5 w-5 text-primary" /> Trading
+          </DialogTitle>
           <p className="text-sm text-muted-foreground">
             Trading isn't configured yet. The site owner needs to fill in SB_URL and SB_KEY in src/net/useTrade.ts
             (Supabase dashboard → Project Settings → API).
@@ -112,7 +116,9 @@ export function TradeModal() {
     return (
       <Dialog open={open} onOpenChange={() => {}}>
         <DialogContent hideClose onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
-          <DialogTitle className="text-lg">🤝 Trade with a friend</DialogTitle>
+          <DialogTitle className="flex items-center gap-2 text-lg">
+            <Handshake className="h-5 w-5 text-primary" /> Trade with a friend
+          </DialogTitle>
           <p className="text-sm text-muted-foreground">
             Both players enter the <b>same room code</b> — share it however you like. Works across any two devices,
             anywhere.
@@ -150,7 +156,9 @@ export function TradeModal() {
   return (
     <Dialog open={open} onOpenChange={() => {}}>
       <DialogContent hideClose onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
-        <DialogTitle className="text-lg">🤝 Trading — room {t.code}</DialogTitle>
+        <DialogTitle className="flex items-center gap-2 text-lg">
+          <Handshake className="h-5 w-5 text-primary" /> Trading — room {t.code}
+        </DialogTitle>
 
         {waiting ? (
           <p className="my-4 text-sm text-muted-foreground">
@@ -160,13 +168,16 @@ export function TradeModal() {
         ) : (
           <>
             {crowded && (
-              <p className="text-sm text-destructive">⚠ More than 2 people are in this room — trading is paused. Pick a fresh code.</p>
+              <p className="text-sm text-destructive">
+                <TriangleAlert className="inline h-4 w-4 -translate-y-px align-middle" /> More than 2 people are in
+                this room — trading is paused. Pick a fresh code.
+              </p>
             )}
             <div className="flex flex-wrap gap-3.5">
               <div className="min-w-[220px] flex-1">
                 <h3 className="text-sm font-semibold">You offer</h3>
                 <div className="mb-1.5 flex items-center gap-2">
-                  <span className="text-sm">🪙</span>
+                  <Coins className="h-4 w-4 text-muted-foreground" />
                   <Input
                     className="w-20"
                     value={coinsInput}
@@ -181,13 +192,27 @@ export function TradeModal() {
               </div>
               <div className="min-w-[220px] flex-1">
                 <h3 className="text-sm font-semibold">They offer</h3>
-                <div className="mb-1.5 text-sm">🪙 {t.their.coins || 0}</div>
+                <div className="mb-1.5 flex items-center gap-1 text-sm">
+                  <Coins className="h-3.5 w-3.5 text-muted-foreground" /> {t.their.coins || 0}
+                </div>
                 <OfferRows mine={false} items={t.their.items} inv={inv} found={found} />
               </div>
             </div>
             <p className="mt-2.5 text-sm text-muted-foreground">
-              {theyAcc && '✅ They accepted your current offer. '}
-              {iAcc ? '✅ You accepted their offer — waiting on them.' : 'Changing any offer resets acceptances on both sides.'}
+              {theyAcc && (
+                <>
+                  <CheckCircle2 className="inline h-3.5 w-3.5 -translate-y-px align-middle text-[#8fe86c]" /> They
+                  accepted your current offer.{' '}
+                </>
+              )}
+              {iAcc ? (
+                <>
+                  <CheckCircle2 className="inline h-3.5 w-3.5 -translate-y-px align-middle text-[#8fe86c]" /> You
+                  accepted their offer — waiting on them.
+                </>
+              ) : (
+                'Changing any offer resets acceptances on both sides.'
+              )}
             </p>
           </>
         )}

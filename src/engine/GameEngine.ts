@@ -4,6 +4,7 @@
 // src/state/gameStore.ts via getState()/setState() the same way the engine
 // talks to any other non-React consumer of a Zustand store — see that
 // file's header comment.
+import { Zap } from 'lucide-react'
 import { Camera } from './camera'
 import { digAt } from './dig'
 import { attachInput, type InputTarget } from './input'
@@ -189,7 +190,7 @@ export class GameEngine implements InputTarget {
       store.recoverItem(item.def)
     }
     if (useGameStore.getState().energy <= 0) {
-      store.pushToast('⚡ Energy exhausted')
+      store.pushToast('Energy exhausted', undefined, Zap)
       window.setTimeout(() => {
         if (useGameStore.getState().mode === 'play') this.endExpedition()
       }, 700)

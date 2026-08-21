@@ -1,5 +1,6 @@
 // Shared types for the engine/data layers. Mirrors the shapes used
 // implicitly (via object literals) in legacy/strata-original.html.
+import type { LucideIcon } from 'lucide-react'
 
 export type RarityId = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary' | 'mythic'
 
@@ -89,7 +90,9 @@ export interface ToolDef {
   soft: number
   rock: number
   cost: number
-  icon: string
+  /** Lucide icon component (see src/data/tools.ts) rather than the
+   * legacy's emoji string — see biomeIcons.tsx for the same pattern. */
+  icon: LucideIcon
   min: number
 }
 

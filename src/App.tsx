@@ -2,6 +2,7 @@
 // (#cv, #topL/#topR, #toolbar, #side, #toast, #modal) + its boot sequence
 // at the bottom of the file (load save, TEST MODE, first render, RAF start).
 import { useEffect, useRef } from 'react'
+import { Save } from 'lucide-react'
 import { GameCanvas } from '@/components/GameCanvas'
 import { Hud } from '@/components/Hud'
 import { Toolbar } from '@/components/Toolbar'
@@ -26,7 +27,7 @@ export default function App() {
     const hadSave = hydrateFromSave()
     if (hadSave) {
       const s = useGameStore.getState()
-      pushToast('💾 Progress restored — Lv ' + s.lvl + ' · 🪙' + s.coins + ' · 🏛 ' + s.found.size + ' catalogued', '#8fe86c')
+      pushToast('Progress restored — Lv ' + s.lvl + ' · ' + s.coins + ' coins · ' + s.found.size + ' catalogued', '#8fe86c', Save)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])

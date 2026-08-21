@@ -5,6 +5,7 @@
 import { Suspense } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
+import { Coins } from 'lucide-react'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
 import { ItemModel } from '@/components/museum/ItemModel'
@@ -22,8 +23,9 @@ export function ItemInspectModal({ item, onClose }: { item: ItemDef | null; onCl
             <DialogTitle className="text-lg">{item.name}</DialogTitle>
             <div className="-mt-2 flex items-center gap-2">
               <Badge style={{ background: rc.c + '22', color: rc.c }}>{rc.n}</Badge>
-              <span className="text-xs text-muted-foreground">
-                {item.cat} · 🪙{item.val} · +{item.xp} XP
+              <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                {item.cat} · <Coins className="h-3 w-3" />
+                {item.val} · +{item.xp} XP
               </span>
             </div>
 

@@ -4,6 +4,7 @@
 // `.setState()` from the engine (see src/engine/GameEngine.ts), same as any
 // other Zustand store — no React dependency either way.
 import { create } from 'zustand'
+import { Coins, Radar, ScanSearch, Star, type LucideIcon } from 'lucide-react'
 import type { BiomeId, CategoryId, ItemDef, ToolId, UiMode } from '@/engine/types'
 import { CATALOG, CATHINT } from '@/data/catalog'
 import { RARITY } from '@/data/rarity'
@@ -14,8 +15,13 @@ const RARITY_NAME = Object.fromEntries(Object.entries(RARITY).map(([k, v]) => [k
 
 export interface Toast {
   id: number
-  html: string
+  /** Plain text, rendered as a React text node (never HTML) — see
+   * ToastStack.tsx. A caught error's `.message` has ended up in here before
+   * (see git history); nothing that flows into this field should ever be
+   * treated as markup, only ever as display text. */
+  text: string
   color?: string
+  icon?: LucideIcon
 }
 
 interface GameState {
@@ -61,7 +67,7 @@ interface GameState {
   showStart: () => void
   showTrade: () => void
   leaveTrade: () => void
-  pushToast: (html: string, color?: string) => void
+  pushToast: (text: string, color?: string, icon?: LucideIcon) => void
   removeToast: (id: number) => void
   applyTradeResult: (coinsDelta: number, itemsGained: Record<string, number>, itemsLost: Record<string, number>) => number
 }
@@ -110,16 +116,16 @@ export const useGameStore = create<GameState>((set, get) => ({
   useScan: () => {
     const s = get()
     if (s.scans <= 0) {
-      get().pushToast('📡 No scanner charges left')
+      get().pushToast('No scanner charges left', undefined, Radar)
       return false
     }
     set({ scans: s.scans - 1 })
-    get().pushToast('📡 Scanning… faint underground signatures revealed')
+    get().pushToast('Scanning… faint underground signatures revealed', undefined, Radar)
     return true
   },
 
   hintToast: (cat) => {
-    get().pushToast('🔍 Something is emerging… looks like ' + CATHINT[cat])
+    get().pushToast('Something is emerging… looks like ' + CATHINT[cat], undefined, ScanSearch)
   },
 
   recoverItem: (def) => {
@@ -130,10 +136,11 @@ export const useGameStore = create<GameState>((set, get) => ({
       found: new Set(s.found).add(def.id),
       finds: [...s.finds, def],
     }))
-    get().pushToast(
-      `<b style="color:${rarityColor}">${def.name}</b> recovered! <span class="rar" style="background:${rarityColor}22;color:${rarityColor}">${RARITY_NAME[def.rar]}</span> +🪙${def.val}`,
-      rarityColor,
-    )
+    // Border color (see ToastStack.tsx) already carries the rarity cue, so
+    // the text itself doesn't need to repeat it — it used to via inline
+    // HTML spans (`<b style="color:...">`), which this plain-text field
+    // deliberately no longer supports; see the Toast.text doc comment.
+    get().pushToast(`${def.name} recovered! ${RARITY_NAME[def.rar]} · +${def.val}`, rarityColor, Coins)
     addXP(set, get, def.xp)
     persist(get())
   },
@@ -173,13 +180,13 @@ export const useGameStore = create<GameState>((set, get) => ({
   showTrade: () => set({ mode: 'trade' }),
   leaveTrade: () => set({ mode: 'menu' }),
 
-  pushToast: (html, color) => {
+  pushToast: (text, color, icon) => {
     const id = ++toastId
     // Cap at 4 visible, like the original's `while(t.children.length>4)
     // t.removeChild(t.firstChild)` — each toast still self-removes on its
     // own timer (see ToastStack.tsx), this just bounds a sudden burst.
     set((s) => {
-      const next = [...s.toasts, { id, html, color }]
+      const next = [...s.toasts, { id, text, color, icon }]
       return { toasts: next.length > 4 ? next.slice(next.length - 4) : next }
     })
   },
@@ -220,7 +227,7 @@ function addXP(set: (fn: (s: GameState) => Partial<GameState>) => void, get: () 
   while (get().xp >= xpNeed(get().lvl)) {
     const need = xpNeed(get().lvl)
     set((s) => ({ xp: s.xp - need, lvl: s.lvl + 1 }))
-    get().pushToast('⭐ Level up! Now level ' + get().lvl, '#e8b34b')
+    get().pushToast('Level up! Now level ' + get().lvl, '#e8b34b', Star)
   }
 }
 
